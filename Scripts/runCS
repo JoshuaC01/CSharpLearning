@@ -1,0 +1,17 @@
+#!/bin/bash
+
+echo ----- BUILDING $1 -----
+csc -out:compiled.exe $@
+
+EXE=compiled.exe
+
+if [ -f $EXE ]; then
+  echo ----- RUNNING $EXE ------
+  echo
+
+  mono $EXE
+
+  echo
+  echo ----- REMOVING $EXE -----
+  rm $EXE
+fi

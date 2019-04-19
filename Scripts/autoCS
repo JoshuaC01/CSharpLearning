@@ -1,0 +1,6 @@
+#!/bin/bash
+
+FILES=$(find ./ -type f)
+echo Loading Files $FILES
+
+runCS $FILES
