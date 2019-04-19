@@ -1,6 +1,7 @@
 #!/bin/bash
 
-FILES=$(find ./ -type f)
+FILES=$(find ./ -name *.cs)
+
 echo Loading Files $FILES
 
 runCS $FILES
