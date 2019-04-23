@@ -5,6 +5,8 @@ using System.Windows.Forms;
 
 public class point {
   public int x, y, value;
+  public bool isJunc = false;
+  public juncPoint junction = null;
 
   public point() {
     this.x = 0;
@@ -29,6 +31,7 @@ public class juncPoint {
   public bool up, down, left, right;
   public int distToStart, distToEnd, totalDist;
   public List<point> cameFrom;
+  public juncPoint nUp, nDown, nLeft, nRight;
 
   public juncPoint() {
     this.up = this.down = this.left = this.right = false;
@@ -37,6 +40,9 @@ public class juncPoint {
 
   public juncPoint(point origin, bool up, bool down, bool left, bool right, point startPoint, point endPoint) {
     this.origin = origin;
+    this.origin.junction = this;
+    this.origin.isJunc = true;
+
     this.up = up;
     this.down = down;
     this.left = left;
@@ -220,13 +226,79 @@ public class MazeSolver : Form {
     foreach(juncPoint junc in junctions) {
       g.FillRectangle(new SolidBrush(junctionColor), new Rectangle(junc.origin.x * boxScale, junc.origin.y * boxScale, boxScale, boxScale));
     }
+    updateCanvas();
+    g.Dispose();
+
+    canvas.Save("NEW - maze.png");
 
     List<juncPoint> path =  aStar(junctions, startPoint, endPoint);
 
-    g.Dispose();
-    updateCanvas();
+    Console.WriteLine("Found Path: ");
+    path.ForEach(Console.WriteLine);
+  }
 
-    canvas.Save("NEW - maze.png");
+  public juncPoint findNeighbours(juncPoint currentPoint, List<juncPoint> allPoints, point[,] mazeArray, point startPoint, point endPoint) {
+    if(currentPoint.up) {
+      int currentY = currentPoint.origin.y - 1;
+      point currentFound = mazeArray[currentPoint.origin.x, currentY];
+      while(!currentPoint.isJunc) {
+        currentY--;
+        currentFound = mazeArray[currentPoint.origin.x, currentY];
+        if(currentFound.value == 0) {
+          currentFound = null;
+          break;
+        }
+      }
+
+      currentPoint.nUp = currentFound.junction;
+    }
+
+    if(currentPoint.down) {
+      int currentY = currentPoint.origin.y + 1;
+      point currentFound = mazeArray[currentPoint.origin.x, currentY];
+      while(!currentPoint.isJunc) {
+        currentY++;
+        currentFound = mazeArray[currentPoint.origin.x, currentY];
+        if(currentFound.value == 0) {
+          currentFound = null;
+          break;
+        }
+      }
+
+      currentPoint.nDown = currentFound.junction;
+    }
+
+    if(currentPoint.left) {
+      int currentX = currentPoint.origin.x - 1;
+      point currentFound = mazeArray[currentX, currentPoint.origin.y];
+      while(!currentPoint.isJunc) {
+        currentX--;
+        currentFound = mazeArray[currentX, currentPoint.origin.y];
+        if(currentFound.value == 0) {
+          currentFound = null;
+          break;
+        }
+      }
+
+      currentPoint.nLeft = currentFound.junction;
+    }
+
+    if(currentPoint.right) {
+      int currentX = currentPoint.origin.x + 1;
+      point currentFound = mazeArray[currentX, currentPoint.origin.y];
+      while(!currentPoint.isJunc) {
+        currentX++;
+        currentFound = mazeArray[currentX, currentPoint.origin.y];
+        if(currentFound.value == 0) {
+          currentFound = null;
+          break;
+        }
+      }
+
+      currentPoint.nRight = currentFound.junction;
+    }
+
+    return currentPoint;
   }
 
   public List<juncPoint> aStar(List<juncPoint> allJunctions, point startPoint, point endPoint) {
@@ -235,6 +307,27 @@ public class MazeSolver : Form {
 
     List<juncPoint> openPoints = new List<juncPoint>();
     List<juncPoint> closedPoints = new List<juncPoint>();
+
+    juncPoint juncStartPoint = new juncPoint(startPoint, false, false, false ,false, startPoint, endPoint);
+
+    juncStartPoint.distToStart = 0;
+
+    juncPoint juncEndPoint = new juncPoint(endPoint, false, false, false ,false, startPoint, endPoint);
+
+    openPoints.Add(juncStartPoint);
+
+    while(openPoints.Count > 0) {
+      openPoints.Sort((a, b) => a.totalDist.CompareTo(b.totalDist));
+
+      juncPoint current = openPoints[0];
+
+      if(current == juncEndPoint) {
+        break;
+      }
+
+      openPoints.Remove(current);
+      closedPoints.Add(current);
+    }
 
     return currentPath;
   }
